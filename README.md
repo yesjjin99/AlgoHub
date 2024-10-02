@@ -1,1 +1,1 @@
-# AlgoLab
+# AlgoHub

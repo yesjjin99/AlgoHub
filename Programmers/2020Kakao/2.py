@@ -1,3 +1,4 @@
+# 괄호 변환
 def check(p):
     cnt = 0
     for c in p:

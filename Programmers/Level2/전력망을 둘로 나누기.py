@@ -1,8 +1,5 @@
 from collections import deque
 
-from Programmers.Level3.네트워크 import find_parent
-
-
 def solution(n, wires):
     graph = [[] for _ in range(n + 1)]
 

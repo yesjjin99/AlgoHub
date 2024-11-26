@@ -8,7 +8,7 @@ def rotate_left(n, d):
 
     if wheels[n][6] != wheels[n - 1][2]:
         rotate_left(n - 1, -d)
-        wheels[n - 1].rotate(-d)
+        wheels[n - 1].rotate(-d)  # 톱니바퀴를 움직이기 전에, 인접한 톱니바퀴가 움직일 수 있는지 없는지를 검사한 뒤 회전
 
 
 def rotate_right(n, d):

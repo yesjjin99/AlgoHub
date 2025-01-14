@@ -1,37 +1,38 @@
-n, m = map(int,input().split())
-home, chicken = [], []
-for i in range(n): # 집과 치킨의 좌표를 리스트에 넣어준다.
-    cities = list(map(int,input().split()))
+n, m = map(int, input().split())
+houses, chickens = [], []
+for i in range(n):
+    city = list(map(int, input().split()))
     for j in range(n):
-        if cities[j] == 1:
-            home.append((i,j))
-        elif cities[j] == 2:
-            chicken.append((i,j))
+        if city[j] == 1:  # 집
+            houses.append((i, j))
+        elif city[j] == 2:  # 치킨집
+            chickens.append((i, j))
 
-visited = [False] * len(chicken)
+visited = [0] * len(chickens)
 result = 1e9
 
-def dfs(idx,cnt):
+def dfs(idx, count):
     global result
 
-    if cnt == m:
-        total = 0
-        for i, j in home: # 집 좌표에 대해 모든 치킨집과의 거리를 구함
-            distance = 1e9 # 거리를 큰 수로 정의
-            for x, (a, b) in enumerate(chicken):
-                if visited[x]:
-                    distance = min(distance, abs(i - a) + abs(j - b))  # 각 집의 치킨 거리(최소)
-            total += distance
-        result = min(total, result)  # 도시의 치킨 거리(최소)
+    if count == m:  # 도시에 있는 치킨집 중에서 M개 선택
+        total = 0  # 도시의 치킨 거리
+        for hx, hy in houses:
+            tmp = 1e9
+            for i, (cx, cy) in enumerate(chickens):
+                if visited[i]:
+                    tmp = min(tmp, abs(cx - hx) + abs(cy - hy))  # 각 집의 치킨 거리 계산
+            total += tmp
+
+        result = min(result, total)
         return
 
-    for i in range(idx, len(chicken)):  # 백트래킹을 사용할 경우, 이미 지난 인덱스는 다시 방문하지 않도록 해야 함 -> 안 그러면 시간 초과 뜸!
+    for i in range(idx, len(chickens)):  # 백트래킹을 사용할 경우, 이미 지난 인덱스는 다시 방문하지 않도록 해야 함 -> 안 그러면 시간 초과 뜸!
         if not visited[i]:
-            visited[i] = True
-            dfs(i + 1, cnt + 1)
-            visited[i] = False
+            visited[i] = 1  # 치킨집 선택
+            dfs(i + 1, count + 1)
+            visited[i] = 0
 
-dfs(0,0)
+dfs(0, 0)
 print(result)
 
 # ---

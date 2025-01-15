@@ -1,44 +1,47 @@
 n = int(input())
-students = [list(map(int, input().split())) for _ in range(n * n)]
-graph = [[0] * n for _ in range(n)]
+students = [list(map(int, input().split())) for _ in range(n ** 2)]
+result = [[0] * n for _ in range(n)]  # 학생의 자리
 dx, dy = [-1, 1, 0, 0], [0, 0, -1, 1]
 
 for student in students:
+    # 모든 위치 탐색하며 가장 적합한 장소 찾기
     pos = []
     for x in range(n):
         for y in range(n):
-            if graph[x][y] != 0:  # 비어있는 칸이어야 함
+            if result[x][y] != 0:  # 이미 자리에 학생이 앉아있는 경우
                 continue
 
-            like, blank = 0, 0
+            likes, empty = 0, 0  # 이 자리에 앉는 경우 인접한 칸에 좋아하는 학생의 수, 빈 칸의 수
             for i in range(4):
                 nx, ny = x + dx[i], y + dy[i]
-                if 0 <= nx < n and 0 <= ny < n:
-                    if graph[nx][ny] in student[1:]:  # 좋아하는 학생이 인접한 칸
-                        like += 1
-                    if graph[nx][ny] == 0:  # 인접한 칸 중에서 비어있는 칸
-                        blank += 1
-            pos.append([-like, -blank, x, y])  # like, blank는 큰 순서대로 / x, y는 작은 순서대로 정렬해야 함
+                if nx < 0 or nx >= n or ny < 0 or ny >= n:
+                    continue
 
-    pos.sort()
-    graph[pos[0][2]][pos[0][3]] = student[0]
+                if result[nx][ny] in student[1:]:  # 좋아하는 학생
+                    likes += 1
+                elif result[nx][ny] == 0:  # 빈 칸
+                    empty += 1
+            pos.append((x, y, likes, empty))
 
-result = 0
+    pos.sort(key=lambda x: (-x[2], -x[3], x[0], x[1]))  # 좋아하는 학생이 많은 순 - 빈 칸이 많은 순 - 행의 번호 작은 순 - 열의 번호 작은 순으로 정렬
+    result[pos[0][0]][pos[0][1]] = student[0]  # 자리 잡기
+
+answer = 0  # 만족도
 for x in range(n):
     for y in range(n):
         likes = []
         for student in students:
-            if student[0] == graph[x][y]:
-                likes = student[1:]
+            if result[x][y] == student[0]:
+                likes = student[1:]  # 자리에 있는 학생의 좋아하는 학생 구하기
                 break
 
-        cnt = 0
+        count = 0  # 인접한 칸에 앉은 좋아하는 학생의 수
         for i in range(4):
             nx, ny = x + dx[i], y + dy[i]
-            if 0 <= nx < n and 0 <= ny < n and graph[nx][ny] in likes:
-                cnt += 1
+            if 0 <= nx < n and 0 <= ny < n and result[nx][ny] in likes:
+                count += 1
 
-        if cnt != 0:
-            result += 10 ** (cnt - 1)
+        if count > 0:
+            answer += 10 ** (count - 1)  # 만족도 계산
 
-print(result)
+print(answer)

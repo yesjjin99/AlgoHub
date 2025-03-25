@@ -1,52 +1,47 @@
 from collections import deque
 
 n = int(input())
-graph = []  # 공간의 상태
-for i in range(n):
-    tmp = list(map(int, input().split()))
-    for j in range(n):
-        if tmp[j] == 9:
-            x, y = i, j  # 현재 아기 상어의 위치(x, y)
-    graph.append(tmp)
-
+board = [list(map(int, input().split())) for _ in range(n)]
 dx, dy = [-1, 1, 0, 0], [0, 0, -1, 1]
+for i in range(n):
+    for j in range(n):
+        if board[i][j] == 9:  # 아기 상어의 위치
+            x, y = i, j
 
-def bfs(x, y, size):
-    visited = [[0] * n for _ in range(n)]
+def bfs(x, y, size):  # 현재 아기 상어의 위치에서 어디로 이동할지(어느 칸에 있는 물고기를 먹을지) 결정
     queue = deque([(x, y)])
-    fish = []  # 먹을 수 있는 물고기
+    visited = [[0] * n for _ in range(n)]
+    fishes = []  # 먹을 수 있는 물고기들
 
     while queue:
         x, y = queue.popleft()
 
         for i in range(4):
             nx, ny = x + dx[i], y + dy[i]
-            if 0 <= nx < n and 0 <= ny < n and not visited[nx][ny]:
-                if graph[nx][ny] <= size:
-                    queue.append((nx, ny))  # 아기 상어 이동
-                    visited[nx][ny] = visited[x][y] + 1
-                    if graph[nx][ny] < size and graph[nx][ny] != 0:  # 빈 칸이 아니고, 자신의 크기보다 작은 물고기인 경우
-                        fish.append((nx, ny, visited[nx][ny]))  # 물고기의 위치, 아기 상어로부터의 거리(지나야 하는 칸의 개수)
+            if 0 <= nx < n and 0 <= ny < n and not visited[nx][ny] and board[nx][ny] <= size:  # 자신의 크기보다 큰 물고기가 있는 칸을 제외한 모든 칸 탐색
+                queue.append((nx, ny))
+                visited[nx][ny] = visited[x][y] + 1  # 해당 칸까지의 이동 시간
 
-    return sorted(fish, key=lambda x: (x[2], x[0], x[1]))  # 거리가 가까운 물고기 - 가장 위에 있는 물고기 - 가장 왼쪽에 있는 물고기 순으로 정렬
+                if board[nx][ny] != 0 and board[nx][ny] < size:  # 아기 상어의 크기보다 작은 물고기가 있는 칸 (먹을 수 있는 물고기 칸)
+                    fishes.append((nx, ny, visited[nx][ny]))  # 물고기의 위치, 물고기가 있는 칸까지 이동한 시간
 
-size = 2  # 아기 상어의 크기
-result, count = 0, 0  # 아기 상어의 이동 시간, 아기 상어가 먹은 물고기의 개수
+    return sorted(fishes, key=lambda x: (x[2], x[0], x[1]))
+
+result, size, count = 0, 2, 0
 
 while True:
-    fish = bfs(x, y, size)
+    fishes = bfs(x, y, size)
 
-    if len(fish) == 0:  # 더 이상 먹을 수 있는 물고기가 공간에 없다면
+    if len(fishes) == 0:  # 더 이상 먹을 물고기가 존재하지 않는 경우
         print(result)
         break
 
-    nx, ny, move_time = fish[0]
-
-    result += move_time  # 물고기를 먹을 때까지 이동한 만큼 시간 카운트
-    graph[x][y], graph[nx][ny] = 0, 0  # 아기 상어가 있던 자리와 물고기를 먹은 자리는 빈 칸으로
-    x, y = nx, ny  # 아기 상어의 현재 좌표 이동
+    nx, ny, time = fishes[0]
+    result += time
+    board[x][y], board[nx][ny] = 0, 0  # 아기 상어의 위치와 물고기의 위치 0으로 초기화
+    x, y = nx, ny  # 아기 상어의 위치 이동
     count += 1
 
-    if size == count:  # 자신의 크기와 같은 수의 물고기를 먹을 때
-        count = 0
+    if count == size:  # 아기 상어의 크기만큼 물고기를 먹은 경우
         size += 1
+        count = 0

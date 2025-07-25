@@ -3,68 +3,100 @@ import java.util.*;
 
 public class Main {
 
-    static int n;
-    static int[][] map;
-    static int max = 0, min = Integer.MAX_VALUE;
-    static int answer = 1;  // 아무 지역도 물에 안 잠길 수 있음
+    static class Node {
+        int v;  // 도착점
+        int cost;  // 비용
 
-    static int[] dx = {-1, 1, 0, 0};
-    static int[] dy = {0, 0, -1, 1};
+        public Node(int v, int c) {
+            this.v = v;
+            this.cost = c;
+        }
+    }
+
+    static int n, m, x;
+    static ArrayList<Node>[] graph, reverseGraph;
+    static int[] distance, reverseDistance;  // 최단 거리 테이블
 
     public static void main(String[] args) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        StringTokenizer st;
+        StringTokenizer st = new StringTokenizer(br.readLine());
 
-        n = Integer.parseInt(br.readLine());
-        map = new int[n][n];
-        for (int i = 0; i < n; i++) {
-            st = new StringTokenizer(br.readLine());
-            for (int j = 0; j < n; j++) {
-                map[i][j] = Integer.parseInt(st.nextToken());
-                min = Math.min(min, map[i][j]);
-                max = Math.max(max, map[i][j]);
-            }
+        n = Integer.parseInt(st.nextToken());
+        m = Integer.parseInt(st.nextToken());
+        x = Integer.parseInt(st.nextToken());
+
+        graph = new ArrayList[n + 1];
+        reverseGraph = new ArrayList[n + 1];  // 반대로 갈 때의 최단시간을 구하기 위한 도로 리스트
+        distance = new int[n + 1];
+        reverseDistance = new int[n + 1];
+
+        for (int i = 0; i <= n; i++) {
+            graph[i] = new ArrayList<>();
+            reverseGraph[i] = new ArrayList<>();
+            distance[i] = Integer.MAX_VALUE;
+            reverseDistance[i] = Integer.MAX_VALUE;
         }
 
-        for (int i = min; i <= max; i++) {
-            answer = Math.max(answer, bfs(i));
+        for (int i = 0; i < m; i++) {
+            st = new StringTokenizer(br.readLine());
+            int u = Integer.parseInt(st.nextToken());
+            int v = Integer.parseInt(st.nextToken());
+            int c = Integer.parseInt(st.nextToken());
+
+            graph[u].add(new Node(v, c));
+            reverseGraph[v].add(new Node(u, c));
+        }
+
+        dijkstraTo();
+        dijkstraFrom();
+
+        int answer = 0;  // 오고 가는데 가장 오래 걸리는 학생의 소요시간
+        for (int i = 1; i <= n; i++) {
+            answer = Math.max(answer, distance[i] + reverseDistance[i]);
         }
 
         System.out.println(answer);
     }
 
-    static int bfs(int h) {
-        Queue<int[]> queue = new LinkedList<>();
-        boolean[][] visited = new boolean[n][n];
-        int cnt = 0;
+    /* N(1 ≤ N ≤ 1,000)에 따른 시간복잡도를 고려해 플로이드 워셜이 아닌 다익스트라 사용 */
 
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                if (visited[i][j] || map[i][j] <= h) continue;
+    static void dijkstraTo() {  // 자신의 마을에서 출발하여 X 마을로 갈 때의 최단시간
+        PriorityQueue<Node> pq = new PriorityQueue<>((o1, o2) -> o1.cost - o2.cost);  // 가중치를 기준으로 최소 힙
+        pq.add(new Node(x, 0));  // 시작 노드에 대해 초기화
+        reverseDistance[x] = 0;
 
-                queue.add(new int[]{i, j});
-                visited[i][j] = true;
+        while (!pq.isEmpty()) {
+            Node cur = pq.poll();
+            if (distance[cur.v] < cur.cost)
+                continue;
 
-                while (!queue.isEmpty()) {
-                    int[] cur = queue.poll();
-
-                    for (int d = 0; d < 4; d++) {
-                        int nx = cur[0] + dx[d];
-                        int ny = cur[1] + dy[d];
-
-                        if (nx < 0 || ny < 0 || nx >= n || ny >= n) continue;
-
-                        if (!visited[nx][ny] && map[nx][ny] > h) {
-                            queue.add(new int[]{nx, ny});
-                            visited[nx][ny] = true;
-                        }
-                    }
+            for (Node next : reverseGraph[cur.v]) {
+                int dist = cur.cost + next.cost;
+                if (dist < reverseDistance[next.v]) {
+                    pq.add(new Node(next.v, dist));
+                    reverseDistance[next.v] = dist;
                 }
-
-                cnt++;
             }
         }
+    }
 
-        return cnt;
+    static void dijkstraFrom() {  // X 마을에서 출발하여 자신의 마을로 돌아갈 때의 최단시간
+        PriorityQueue<Node> pq = new PriorityQueue<>((o1, o2) -> o2.cost - o1.cost);
+        pq.add(new Node(x, 0));
+        distance[x] = 0;
+
+        while (!pq.isEmpty()) {
+            Node cur = pq.poll();
+            if (distance[cur.v] < cur.cost)
+                continue;
+
+            for (Node next : graph[cur.v]) {
+                int dist = cur.cost + next.cost;
+                if (dist < distance[next.v]) {
+                    pq.add(new Node(next.v, dist));
+                    distance[next.v] = dist;
+                }
+            }
+        }
     }
 }

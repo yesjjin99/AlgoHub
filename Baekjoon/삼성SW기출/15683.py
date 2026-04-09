@@ -45,7 +45,7 @@ def dfs(count, graph):  # 각 CCTV 별로 가장 최적의 방향 조합 찾기
     for m in mode[cctv_num]:
         fill(x, y, m, tmp)  # 감시 시작
         dfs(count + 1, tmp)
-        tmp = copy.deepcopy(graph)  # 그래프 초기화
+        tmp = copy.deepcopy(graph)  # 그래프 초기화(백트래킹)
 
 result = int(1e9)
 dfs(0, graph)
